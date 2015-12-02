@@ -59,7 +59,7 @@ void SIM900A_SendPost( void )
 {
     char buffer[16];
     u16 temp;
-    ch2o_concentration = ch2o.read();
+    ch2o_concentration = ch2o.read_average();
     temp = ch2o_concentration*1000;
     sprintf(buffer, "%d.%03d",temp/1000,temp%1000);
     
@@ -73,9 +73,9 @@ void SIM900A_SendPost( void )
 
 void SIM900A_SendDataToServer( void )
 {
-    static u8 step = 0;
+    static u8 step = 100;
     static u16 time_sec_count = 0;
-    //Serial.println("SIM900A_SendDataToServer");
+    
     switch(step)
     {
         case 0:
@@ -139,6 +139,13 @@ void SIM900A_SendDataToServer( void )
                 step++;
             }
             break;
+        case 100:
+            if (time_sec_count >= 300)//5min认为传感器稳定，可上报当前数据
+            {
+                time_sec_count = 0;
+                step = 0;
+            }
+            break;
         default: 
             if (time_sec_count >= 1737)//每个半小时上报一次数据到传感云网站
             {
@@ -151,8 +158,7 @@ void SIM900A_SendDataToServer( void )
 }
 
 void setup() {
-  // put your setup code here, to run once:
-    //Serial.begin(9600);
+    u8 i, j;
     gsm.begin(9600);
 
     /*while (!Serial) {
@@ -167,27 +173,39 @@ void setup() {
     pinMode(HWSTART_PIN, OUTPUT); 
     Timer1.initialize(1000000);
     Timer1.attachInterrupt(SIM900A_SendDataToServer);
-    //Timer1.start();
+    Timer1.start();
 
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("HCHO: ");
-    lcd.setCursor(0,1);
-    lcd.print("0.000 mg/m3"); 
+    for (i = 0; i < 2; i++)
+    {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("System Power On!");  
+        lcd.setCursor(0, 1);
+        lcd.print("Waiting");
+        for ( j = 0; j < 7; j++)
+        {
+            lcd.setCursor(7+j, 1);
+            lcd.print(".");
+            delay(999);
+        }
+    }
 }
 
 void loop() {
+    static unsigned long disp_refresh_time = millis();
     ch2o.loop();
-    if (ch2o_concentration != ch2o.read())
+    if ((ch2o_concentration != ch2o.read_current()) && (millis() - disp_refresh_time) >= 2000)
     {
         u16 temp;
         char buffer[16];
-        ch2o_concentration = ch2o.read();
+
+        disp_refresh_time = millis();
+        ch2o_concentration = ch2o.read_current();
         
         temp = ch2o_concentration*1000;
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("CH2o: ");
+        lcd.print("HCHO: ");
         lcd.setCursor(0,1);
         sprintf(buffer, "%d.%03d mg/m3",temp/1000,temp%1000);
         lcd.print(buffer);     
