@@ -63,7 +63,7 @@ void SIM900A_SendPost( void )
     temp = ch2o_concentration*1000;
     sprintf(buffer, "%d.%03d",temp/1000,temp%1000);
     
-    gsm.print("POST /data/v1/numerical/insert?ak=a683525f2703aaa9bdfb6b36f9a9b0b2&id=564dc58ee4b0932584ded5a2&value=");
+    gsm.print("POST /data/v1/numerical/insert?ak=a683525f2703aaa9bdfb6b36f9a9b0b2&id=565f007be4b00415c4386186&value=");
     gsm.print(buffer);     
     gsm.println(" HTTP/1.1");
     gsm.println("Host: api.wsncloud.com");
@@ -140,7 +140,7 @@ void SIM900A_SendDataToServer( void )
             }
             break;
         default: 
-            if (time_sec_count >= 300)
+            if (time_sec_count >= 1737)//每个半小时上报一次数据到传感云网站
             {
                 time_sec_count = 0;
                 step = 0;
