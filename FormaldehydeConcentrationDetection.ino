@@ -171,7 +171,7 @@ void setup() {
 
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("CH2o: ");
+    lcd.print("HCHO: ");
     lcd.setCursor(0,1);
     lcd.print("0.000 mg/m3"); 
 }
